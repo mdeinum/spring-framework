@@ -37,6 +37,7 @@ import org.springframework.util.StringUtils;
  * @author Sam Brannen
  * @author Juergen Hoeller
  * @author Rob Harrop
+ * @author Marten Deinum
  * @since 4.0
  */
 public class DefaultTestContext implements TestContext {
@@ -44,6 +45,8 @@ public class DefaultTestContext implements TestContext {
 	private static final long serialVersionUID = -5827157174866681233L;
 
 	private final Map<String, Object> attributes = new ConcurrentHashMap<>(4);
+
+	private final Map<String, Runnable> destructionCallbacks = new ConcurrentHashMap<>(4);
 
 	private final CacheAwareContextLoaderDelegate cacheAwareContextLoaderDelegate;
 
@@ -219,6 +222,37 @@ public class DefaultTestContext implements TestContext {
 			return StringUtils.toStringArray(this.attributes.keySet());
 		}
 	}
+
+	@Override
+	public void registerDestructionCallback(String name, Runnable callback) {
+		Assert.notNull(name, "Name must not be null");
+		Assert.notNull(callback, "Callback must not be null");
+		synchronized (this.destructionCallbacks) {
+			this.destructionCallbacks.put(name, callback);
+		}
+	}
+
+	@Override
+	public void removeDestructionCallback(String name) {
+		synchronized (this.destructionCallbacks) {
+			this.destructionCallbacks.remove(name);
+		}
+	}
+
+	/**
+	 * Execute all callbacks that have been registered for execution
+	 * after request completion.
+	 */
+	@Override
+	public void executeDestructionCallbacks() {
+		synchronized (this.destructionCallbacks) {
+			for (Runnable runnable : this.destructionCallbacks.values()) {
+				runnable.run();
+			}
+			this.destructionCallbacks.clear();
+		}
+	}
+
 
 
 	/**

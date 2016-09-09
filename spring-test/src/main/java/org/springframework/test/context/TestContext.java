@@ -39,6 +39,7 @@ import org.springframework.test.annotation.DirtiesContext.HierarchyMode;
  * that executes tests concurrently.
  *
  * @author Sam Brannen
+ * @author Marten Deinum
  * @since 2.5
  * @see TestContextManager
  * @see TestExecutionListener
@@ -152,4 +153,14 @@ public interface TestContext extends AttributeAccessor, Serializable {
 	 */
 	void updateState(@Nullable Object testInstance, @Nullable Method testMethod, @Nullable Throwable testException);
 
+	void registerDestructionCallback(String name, Runnable runnable);
+
+	/**
+	 * Execute all callbacks that have been registered for execution
+	 * after test completion.
+	 */
+	void executeDestructionCallbacks();
+
+
+    void removeDestructionCallback(String name);
 }

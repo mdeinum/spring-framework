@@ -282,6 +282,7 @@ public class TestContextManager {
 	 */
 	public void beforeTestMethod(Object testInstance, Method testMethod) throws Exception {
 		String callbackName = "beforeTestMethod";
+		TestContextHolder.setTestContext(getTestContext());
 		prepareForBeforeCallback(callbackName, testInstance, testMethod);
 
 		for (TestExecutionListener testExecutionListener : getTestExecutionListeners()) {
@@ -389,6 +390,8 @@ public class TestContextManager {
 			}
 		}
 
+		getTestContext().executeDestructionCallbacks();
+
 		if (afterTestExecutionException != null) {
 			ReflectionUtils.rethrowException(afterTestExecutionException);
 		}
@@ -450,6 +453,8 @@ public class TestContextManager {
 				}
 			}
 		}
+
+		TestContextHolder.resetTestContext();
 
 		if (afterTestMethodException != null) {
 			ReflectionUtils.rethrowException(afterTestMethodException);

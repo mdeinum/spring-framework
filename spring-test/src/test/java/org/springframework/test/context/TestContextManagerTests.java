@@ -24,6 +24,8 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * JUnit 4 based unit test for {@link TestContextManager}, which verifies proper
@@ -101,6 +103,24 @@ class TestContextManagerTests {
 			"afterTestMethod-1"
 		);
 		// @formatter:on
+	}
+
+	@Test
+	public void setupAndCleanupOfCurrentTestContext() throws Exception {
+		try {
+			TestContextHolder.currentTestContext();
+			fail("Expected no thread-bound TestContext.");
+		} catch (IllegalStateException ise) {}
+
+		this.testContextManager.beforeTestMethod(this, this.testMethod);
+		assertNotNull(TestContextHolder.currentTestContext());
+		this.testContextManager.afterTestMethod(this, this.testMethod, null);
+
+		try {
+			TestContextHolder.currentTestContext();
+			fail("Expected no thread-bound TestContext.");
+		} catch (IllegalStateException ise) {}
+
 	}
 
 	private static void assertExecutionOrder(String usageContext, String... expectedBeforeTestMethodCalls) {
