@@ -26,7 +26,10 @@ import java.util.function.Supplier;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.lang.Nullable;
+import org.springframework.test.context.support.TestScope;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.ReflectionUtils;
 
@@ -206,6 +209,7 @@ public class TestContextManager {
 		if (logger.isTraceEnabled()) {
 			logger.trace("beforeTestClass(): class [" + testClass.getName() + "]");
 		}
+		registerTestScope();
 		getTestContext().updateState(null, null, null);
 
 		for (TestExecutionListener testExecutionListener : getTestExecutionListeners()) {
@@ -216,6 +220,13 @@ public class TestContextManager {
 				logException(ex, "beforeTestClass", testExecutionListener, testClass);
 				ReflectionUtils.rethrowException(ex);
 			}
+		}
+	}
+
+	private void registerTestScope() {
+		AutowireCapableBeanFactory beanFactory = getTestContext().getApplicationContext().getAutowireCapableBeanFactory();
+		if (beanFactory instanceof ConfigurableBeanFactory) {
+			((ConfigurableBeanFactory) beanFactory).registerScope("test", new TestScope(this));
 		}
 	}
 
